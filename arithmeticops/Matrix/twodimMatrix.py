@@ -6,7 +6,7 @@ ncols=0
 
 nrows=int(input("Enter the no.of rows:"))
 ncols=int(input("enter the no.of cols:"))
-
+#Entering input of Mat1 and mat2
 for rows in range(nrows):
     for cols in range(ncols):
         v=int(input("enter the element:"))
@@ -16,7 +16,7 @@ for rows in range(nrows):
     for cols in range(ncols):
         v = int(input("enter the element:"))
         matrix2[rows][cols]=v
-
+#printing two matrices
 for rows in range(len(matrix1)):
     for cols in range(len(matrix1[rows])):
         print(matrix1[rows][cols]+matrix2[rows][cols],end=" ")
