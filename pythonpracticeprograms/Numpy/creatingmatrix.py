@@ -28,3 +28,10 @@ print(m6)
 
 m7=np.arange(2,20,2)
 print(m7)
+
+a = np.array([1,2,3,4])
+x=a.copy()
+a[0]=23
+
+print(a)
+print(x)
