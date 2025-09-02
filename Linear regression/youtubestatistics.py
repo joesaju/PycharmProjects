@@ -26,10 +26,10 @@ dataframe['channel_title'] = le.fit_transform(dataframe['channel_title'])
 dataframe['tags'] = le.fit_transform(dataframe['tags'])
 print(dataframe)
 
-
+#plotting the data in graph
 sns.pairplot(dataframe[['comment_count','view_count','like_count']])
 plt.show()
-
+#predicting view counts
 x=new_data[['comment_count','like_count']]
 y=new_data['view_count']
 model = LinearRegression()
@@ -62,11 +62,9 @@ def predicted_view(like, comment):
 
 print(predicted_view(like_var, comment_var))
 
-#calculate metrice
-
 
 y_pred = model.predict(X_test)
-
+#calculating rsquare
 mse = mean_squared_error(y_test, y_pred)
 mae = mean_absolute_error(y_test, y_pred)
 r2 = r2_score(y_test, y_pred)
