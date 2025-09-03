@@ -21,22 +21,16 @@ print(bd.head())
 print(bd.columns)
 
 #classification of data
-# Replace 'feature_columns' and 'target_column' with actual column names from your dataset
-feature_columns = [col for col in bd.columns if col != 'estimated_salary']  # assuming 'Exited' is the target
-target_column = 'estimated_salary'  # change if your target column is named differently
-
-x = bd['credit_score']
-y = bd['estimated_salary']
+x = bd[['credit_score', 'age']]
+y = bd['churn']
 print(np.median(y))
-y_binary = (y > np.median(y)).astype(int)
-print(y_binary.head(20))
+y_binary=(y>np.median(y)).astype(int)
+print(y_binary)
 
-#split the data
+#split the data into testing and training sets
 x_train,x_test,y_train,y_test=train_test_split(x,y_binary,test_size=0.2,random_state=42)
 scaler = StandardScaler()
-x_train = x_train.values.reshape(-1, 1)
 x_train = scaler.fit_transform(x_train)
-x_test = x_test.values.reshape(-1, 1)
 x_test = scaler.transform(x_test)
 
 #train logistic regression model
@@ -61,9 +55,17 @@ print("AUC: {:.2f}".format(roc_auc))
 import matplotlib.pyplot as plt
 import seaborn as sns
 plt.figure(figsize=(8, 6))
-sns.scatterplot(x=x_test[:,0], y=y_test, hue=y_test, palette={0:'blue',1:'red'},marker='o')
+sns.scatterplot(x=x_test[:,0], y=x_test[:,1], hue=y_test, palette={0:'blue',1:'red'}, marker='o')
 plt.xlabel('credit_score')
-plt.ylabel('estimated_salary')
-plt.title('Logistic regression decision boundary Accuracy:{:.2f}%'.format(accuracy*100))
-plt.legend(title="Customer churn report", loc="upper right")
+plt.ylabel('age')
+plt.title('Accuracy rate of customer churn:{:.2f}%'.format(accuracy*100))
+plt.legend(title="Customer churn", loc="upper right")
+plt.show()
+
+#heatmap
+plt.figure(figsize=(6, 4))
+sns.heatmap(confusion_matrix, annot=True, fmt='d', cmap='Blues')
+plt.title('Confusion Matrix Heatmap')
+plt.xlabel('Predicted')
+plt.ylabel('Actual')
 plt.show()
