@@ -113,6 +113,13 @@ pred = model.predict(new_df_scaled)
 income_pred = label_encoders['income'].inverse_transform(pred)
 print(f"Predicted income class: {income_pred[0]}")
 
+# --- Dump model, scaler, and encoders to .pkl files ---
+import joblib
+joblib.dump(model, 'model.pkl')
+joblib.dump(scaler, 'scaler.pkl')
+joblib.dump(label_encoders, 'label_encoders.pkl')
+print("Model, scaler, and label encoders have been saved to .pkl files.")
+
 # --- Scatter plot (visualization) ---
 plt.figure(figsize=(8,6))
 sns.scatterplot(x='age', y='hours_per_week', hue='income', data=df)
@@ -128,3 +135,10 @@ plt.xlabel('Predicted')
 plt.ylabel('Actual')
 plt.show()
 
+# Visualization: Hours per week by income
+plt.subplot(2, 3, 4)
+sns.boxplot(data=df, x='income', y='hours_per_week')
+plt.title('Weekly Hours by Income')
+plt.xlabel('Income')
+plt.ylabel('Hours per Week')
+plt.xticks(ticks=[0, 1], labels=['<=50K', '>50K'])
