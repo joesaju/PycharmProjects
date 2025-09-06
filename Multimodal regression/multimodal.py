@@ -115,9 +115,9 @@ print(f"Predicted income class: {income_pred[0]}")
 
 # --- Dump model, scaler, and encoders to .pkl files ---
 import joblib
-joblib.dump(model, 'model.pkl')
-joblib.dump(scaler, 'scaler.pkl')
-joblib.dump(label_encoders, 'label_encoders.pkl')
+joblib.dump(model, r'D:\python\New folder\Multimodal regression\model.pkl')
+joblib.dump(scaler, r'D:\python\New folder\Multimodal regression\scaler.pkl')
+joblib.dump(label_encoders, r'D:\python\New folder\Multimodal regression\label_encoders.pkl')
 print("Model, scaler, and label encoders have been saved to .pkl files.")
 
 # --- Scatter plot (visualization) ---
@@ -136,7 +136,7 @@ plt.ylabel('Actual')
 plt.show()
 
 # Visualization: Hours per week by income
-plt.subplot(2, 3, 4)
+plt.figure()
 sns.boxplot(data=df, x='income', y='hours_per_week')
 plt.title('Weekly Hours by Income')
 plt.xlabel('Income')
