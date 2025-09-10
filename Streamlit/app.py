@@ -15,4 +15,4 @@ Signups = st.slider("Signups", min_value=1.0, max_value=20.0)
 if st.button("Predict"):
     features = np.array([[Page_Views, Clicks, Signups]])
     prediction = model.predict(features)
-    st.write(f"Predicted Iris Species: {prediction[0]}")
+    st.write(f"Predicted Revenue: {prediction[0]}")

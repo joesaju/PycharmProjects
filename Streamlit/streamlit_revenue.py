@@ -9,7 +9,7 @@ df = pd.read_csv(r"D:\MYDOCS\AI\streamlit_practice_dataset.csv")
 
 df.drop('User_ID', axis=1, inplace=True)
 
-X = df.drop(columns=['Page_Views', 'Signups', 'Date'])
+X = df.drop(columns=['Page_Views', 'Date'])
 y = df['Revenue']
 
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
