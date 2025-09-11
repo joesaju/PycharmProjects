@@ -43,5 +43,5 @@ print(f"Mean Squared Error: {mse:.2f}")
 print(f"R² Score: {r2:.2f}")
 
 # Save model
-with open(r"D:\python\New folder\Streamlit\classifier.pkl", "wb") as model_file:
+with open("classifier.pkl", "wb") as model_file:
     pickle.dump(model, model_file)

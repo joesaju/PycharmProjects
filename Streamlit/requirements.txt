@@ -1,4 +1,10 @@
+<<<<<<< HEAD
 streamlit
 pandas
 numpy
+=======
+streamlit
+pandas
+numpy
+>>>>>>> 76ec67b2ee82074450c776d4b673e1e133edcab4
 scikit-learn
