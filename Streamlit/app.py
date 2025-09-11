@@ -4,7 +4,7 @@ import numpy as np
 import datetime
 
 # Load model
-with open("D:\python\New folder\Streamlit\classifier.pkl", "rb") as model_file:
+with open(r"D:\python\New folder\Streamlit\classifier.pkl", "rb") as model_file:
     model = pickle.load(model_file)
 
 st.title("💰 Revenue Predictor")
