@@ -2,7 +2,6 @@ import pandas as pd
 from sklearn.model_selection import train_test_split, cross_val_score
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.metrics import mean_squared_error, r2_score
-import numpy as np
 import pickle
 
 # Load dataset
