@@ -3,3 +3,7 @@ pandas
 numpy
 scikit-learn
 matplotlib
+tensorflow.keras
+os
+PIL
+
