@@ -83,7 +83,7 @@ img = x_test[idx]
 true_label = int(y_test[idx])
 pred_label = np.argmax(model.predict(x_test_flat[idx].reshape(1, -1)))
 
-st.image(img, caption=f"True: {class_names[true_label]} | Predicted: {class_names[pred_label]}", use_container_width=True)
+st.image(img, caption=f"True: {class_names[true_label]} | Predicted: {class_names[pred_label]}", width='stretch')
 
 # -----------------------------
 # User Upload Option
