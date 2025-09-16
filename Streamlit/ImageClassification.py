@@ -101,3 +101,6 @@ if uploaded_file is not None:
         st.image(img, caption=f"Predicted: {class_names[pred_label]}", use_column_width=True)
     else:
         st.error("Uploaded image must be RGB with 3 channels (not grayscale).")
+
+import warnings
+warnings.filterwarnings("ignore", category=UserWarning)
