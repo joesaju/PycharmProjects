@@ -8,7 +8,8 @@ from tensorflow.keras.utils import to_categorical
 from tensorflow.keras.optimizers import Adam
 import os
 from PIL import Image
-
+import warnings
+warnings.filterwarnings("ignore", category=UserWarning)
 # -----------------------------
 # CIFAR-10 Class Labels
 # -----------------------------
@@ -102,5 +103,4 @@ if uploaded_file is not None:
     else:
         st.error("Uploaded image must be RGB with 3 channels (not grayscale).")
 
-import warnings
-warnings.filterwarnings("ignore", category=UserWarning)
+
