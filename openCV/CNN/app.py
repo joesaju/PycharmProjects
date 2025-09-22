@@ -1,0 +1,192 @@
+# app_anpr_extended.py
+import streamlit as st
+import cv2
+import numpy as np
+import pandas as pd
+import time
+from datetime import datetime
+from ultralytics import YOLO
+import easyocr
+import os
+
+st.set_page_config(page_title="ANPR Extended", layout="wide")
+st.title("📱 Vehicle License Plate Recognition (ANPR)")
+
+################################################################################
+# Sidebar: Settings & Input selection
+################################################################################
+st.sidebar.header("Settings")
+
+# YOLO model path
+model_path = st.sidebar.text_input("YOLO model path (best.pt)", "")
+
+# Detection/OCR settings
+confidence = st.sidebar.slider("Detection confidence", 0.1, 0.9, 0.4)
+ocr_allowlist = st.sidebar.text_input("OCR allowlist", "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789")
+
+# Input source
+source_type = st.sidebar.radio(
+    "Select input type",
+    ["DroidCam (live feed)", "Upload video", "Upload image"]
+)
+
+# DroidCam URL
+droidcam_url = ""
+uploaded_video = None
+uploaded_image = None
+if source_type == "DroidCam (live feed)":
+    droidcam_url = st.sidebar.text_input("Enter DroidCam URL", "http://192.168.0.105:4747/video")
+elif source_type == "Upload video":
+    uploaded_video = st.sidebar.file_uploader("Upload video", type=["mp4", "avi", "mov"])
+elif source_type == "Upload image":
+    uploaded_image = st.sidebar.file_uploader("Upload image", type=["jpg", "jpeg", "png"])
+
+################################################################################
+# Load YOLO + EasyOCR
+################################################################################
+@st.cache_resource
+def load_models(path):
+    if path and os.path.exists(path):
+        model = YOLO(path)
+    else:
+        model = YOLO("yolov8n.pt")   # fallback
+    reader = easyocr.Reader(['en'], gpu=False)
+    return model, reader
+
+model, reader = load_models(model_path)
+
+if "plates_log" not in st.session_state:
+    st.session_state["plates_log"] = []
+
+################################################################################
+# Helpers
+################################################################################
+def preprocess_plate_for_ocr(img):
+    gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+    _, th = cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+    return th
+
+def detect_and_recognize(frame, model, reader, conf, allowlist):
+    results = model(frame, imgsz=640, conf=conf)
+    annotated = frame.copy()
+    plates_info = []
+
+    for r in results:
+        if r.boxes is None: continue
+        for box in r.boxes:
+            x1, y1, x2, y2 = box.xyxy[0].int().tolist()
+            crop = frame[y1:y2, x1:x2]
+            crop_pre = preprocess_plate_for_ocr(crop)
+
+            text = ""
+            conf_ocr = 0.0
+            try:
+                ocr_out = reader.readtext(crop_pre, detail=1, allowlist=allowlist)
+                if ocr_out:
+                    best = max(ocr_out, key=lambda x: x[2])
+                    text, conf_ocr = best[1], best[2]
+            except:
+                pass
+
+            cv2.rectangle(annotated, (x1, y1), (x2, y2), (0, 255, 0), 2)
+            cv2.putText(annotated, text, (x1, y1 - 5), cv2.FONT_HERSHEY_SIMPLEX,
+                        0.7, (255, 255, 0), 2)
+
+            plates_info.append({"text": text, "ocr_conf": conf_ocr})
+
+    return annotated, plates_info
+
+################################################################################
+# UI Layout
+################################################################################
+col1, col2 = st.columns([2, 1])
+
+with col2:
+    st.header("Recognized Plates")
+    table_placeholder = st.empty()
+
+with col1:
+    st.header("Video / Image Feed")
+    start = st.button("Start")
+    stop = st.button("Stop")
+
+    if start:
+        # 1) DroidCam live feed
+        if source_type == "DroidCam (live feed)":
+            cap = cv2.VideoCapture(droidcam_url)
+            if not cap.isOpened():
+                st.error("Failed to connect to DroidCam. Check Wi-Fi and URL.")
+            else:
+                stframe = st.empty()
+                while cap.isOpened():
+                    if stop: break
+                    ret, frame = cap.read()
+                    if not ret: break
+
+                    annotated, plates = detect_and_recognize(frame, model, reader, confidence, ocr_allowlist)
+
+                    ts = datetime.utcnow().isoformat()
+                    for p in plates:
+                        st.session_state["plates_log"].append({
+                            "timestamp": ts,
+                            "text": p["text"],
+                            "ocr_conf": p["ocr_conf"]
+                        })
+
+                    stframe.image(cv2.cvtColor(annotated, cv2.COLOR_BGR2RGB), channels="RGB")
+                    df = pd.DataFrame(st.session_state["plates_log"])
+                    table_placeholder.dataframe(df.tail(10))
+                    time.sleep(0.03)
+                cap.release()
+                st.success("Stream stopped")
+
+        # 2) Video upload
+        elif source_type == "Upload video" and uploaded_video is not None:
+            tmp_path = f"uploaded_{int(time.time())}.mp4"
+            with open(tmp_path, "wb") as f:
+                f.write(uploaded_video.read())
+            cap = cv2.VideoCapture(tmp_path)
+            stframe = st.empty()
+            while cap.isOpened():
+                ret, frame = cap.read()
+                if not ret: break
+
+                annotated, plates = detect_and_recognize(frame, model, reader, confidence, ocr_allowlist)
+
+                ts = datetime.utcnow().isoformat()
+                for p in plates:
+                    st.session_state["plates_log"].append({
+                        "timestamp": ts,
+                        "text": p["text"],
+                        "ocr_conf": p["ocr_conf"]
+                    })
+
+                stframe.image(cv2.cvtColor(annotated, cv2.COLOR_BGR2RGB), channels="RGB")
+                df = pd.DataFrame(st.session_state["plates_log"])
+                table_placeholder.dataframe(df.tail(10))
+                time.sleep(0.03)
+            cap.release()
+            st.success("Video processing complete")
+
+        # 3) Image upload
+        elif source_type == "Upload image" and uploaded_image is not None:
+            file_bytes = np.asarray(bytearray(uploaded_image.read()), dtype=np.uint8)
+            frame = cv2.imdecode(file_bytes, cv2.IMREAD_COLOR)
+
+            annotated, plates = detect_and_recognize(frame, model, reader, confidence, ocr_allowlist)
+
+            ts = datetime.utcnow().isoformat()
+            for p in plates:
+                st.session_state["plates_log"].append({
+                    "timestamp": ts,
+                    "text": p["text"],
+                    "ocr_conf": p["ocr_conf"]
+                })
+
+            st.image(cv2.cvtColor(annotated, cv2.COLOR_BGR2RGB), channels="RGB")
+            df = pd.DataFrame(st.session_state["plates_log"])
+            table_placeholder.dataframe(df.tail(10))
+            st.success("Image processing complete")
+
+st.markdown("---")
+st.markdown("Supports DroidCam live feed, uploaded video, and uploaded images.")

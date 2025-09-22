@@ -1,0 +1,10 @@
+streamlit
+streamlit-webrtc
+ultralytics
+easyocr
+opencv-python-headless   # or opencv-python if you need GUI
+numpy
+pandas
+pillow
+av
+aiortc  
