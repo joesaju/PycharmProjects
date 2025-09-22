@@ -1,4 +1,4 @@
-# app_anpr_extended.py
+# app_plate_only.py
 import streamlit as st
 import cv2
 import numpy as np
@@ -9,28 +9,23 @@ from ultralytics import YOLO
 import easyocr
 import os
 
-st.set_page_config(page_title="ANPR Extended", layout="wide")
-st.title("📱 Vehicle License Plate Recognition (ANPR)")
+st.set_page_config(page_title="ANPR Number Plate Only", layout="wide")
+st.title("🚗 License Plate Recognition (Number Plate Only)")
 
 ################################################################################
-# Sidebar: Settings & Input selection
+# Sidebar: Settings & Input
 ################################################################################
 st.sidebar.header("Settings")
 
-# YOLO model path
-model_path = st.sidebar.text_input("YOLO model path (best.pt)", "")
-
-# Detection/OCR settings
+model_path = st.sidebar.text_input("YOLO Plate model path", "plate_detector.pt")
 confidence = st.sidebar.slider("Detection confidence", 0.1, 0.9, 0.4)
 ocr_allowlist = st.sidebar.text_input("OCR allowlist", "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789")
 
-# Input source
 source_type = st.sidebar.radio(
     "Select input type",
     ["DroidCam (live feed)", "Upload video", "Upload image"]
 )
 
-# DroidCam URL
 droidcam_url = ""
 uploaded_video = None
 uploaded_image = None
@@ -42,14 +37,14 @@ elif source_type == "Upload image":
     uploaded_image = st.sidebar.file_uploader("Upload image", type=["jpg", "jpeg", "png"])
 
 ################################################################################
-# Load YOLO + EasyOCR
+# Load models
 ################################################################################
 @st.cache_resource
 def load_models(path):
     if path and os.path.exists(path):
         model = YOLO(path)
     else:
-        model = YOLO("yolov8n.pt")   # fallback
+        model = YOLO("yolov8n.pt")  # fallback generic YOLO
     reader = easyocr.Reader(['en'], gpu=False)
     return model, reader
 
@@ -66,7 +61,7 @@ def preprocess_plate_for_ocr(img):
     _, th = cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
     return th
 
-def detect_and_recognize(frame, model, reader, conf, allowlist):
+def detect_plate_and_recognize(frame, model, reader, conf, allowlist):
     results = model(frame, imgsz=640, conf=conf)
     annotated = frame.copy()
     plates_info = []
@@ -75,13 +70,14 @@ def detect_and_recognize(frame, model, reader, conf, allowlist):
         if r.boxes is None: continue
         for box in r.boxes:
             x1, y1, x2, y2 = box.xyxy[0].int().tolist()
-            crop = frame[y1:y2, x1:x2]
-            crop_pre = preprocess_plate_for_ocr(crop)
+            # Crop ONLY the plate region
+            plate_crop = frame[y1:y2, x1:x2]
+            plate_pre = preprocess_plate_for_ocr(plate_crop)
 
             text = ""
             conf_ocr = 0.0
             try:
-                ocr_out = reader.readtext(crop_pre, detail=1, allowlist=allowlist)
+                ocr_out = reader.readtext(plate_pre, detail=1, allowlist=allowlist)
                 if ocr_out:
                     best = max(ocr_out, key=lambda x: x[2])
                     text, conf_ocr = best[1], best[2]
@@ -106,16 +102,16 @@ with col2:
     table_placeholder = st.empty()
 
 with col1:
-    st.header("Video / Image Feed")
+    st.header("Feed")
     start = st.button("Start")
     stop = st.button("Stop")
 
     if start:
-        # 1) DroidCam live feed
+        # --- DroidCam ---
         if source_type == "DroidCam (live feed)":
             cap = cv2.VideoCapture(droidcam_url)
             if not cap.isOpened():
-                st.error("Failed to connect to DroidCam. Check Wi-Fi and URL.")
+                st.error("Failed to connect to DroidCam. Check URL.")
             else:
                 stframe = st.empty()
                 while cap.isOpened():
@@ -123,8 +119,7 @@ with col1:
                     ret, frame = cap.read()
                     if not ret: break
 
-                    annotated, plates = detect_and_recognize(frame, model, reader, confidence, ocr_allowlist)
-
+                    annotated, plates = detect_plate_and_recognize(frame, model, reader, confidence, ocr_allowlist)
                     ts = datetime.utcnow().isoformat()
                     for p in plates:
                         st.session_state["plates_log"].append({
@@ -140,7 +135,7 @@ with col1:
                 cap.release()
                 st.success("Stream stopped")
 
-        # 2) Video upload
+        # --- Video Upload ---
         elif source_type == "Upload video" and uploaded_video is not None:
             tmp_path = f"uploaded_{int(time.time())}.mp4"
             with open(tmp_path, "wb") as f:
@@ -151,8 +146,7 @@ with col1:
                 ret, frame = cap.read()
                 if not ret: break
 
-                annotated, plates = detect_and_recognize(frame, model, reader, confidence, ocr_allowlist)
-
+                annotated, plates = detect_plate_and_recognize(frame, model, reader, confidence, ocr_allowlist)
                 ts = datetime.utcnow().isoformat()
                 for p in plates:
                     st.session_state["plates_log"].append({
@@ -168,13 +162,12 @@ with col1:
             cap.release()
             st.success("Video processing complete")
 
-        # 3) Image upload
+        # --- Image Upload ---
         elif source_type == "Upload image" and uploaded_image is not None:
             file_bytes = np.asarray(bytearray(uploaded_image.read()), dtype=np.uint8)
             frame = cv2.imdecode(file_bytes, cv2.IMREAD_COLOR)
 
-            annotated, plates = detect_and_recognize(frame, model, reader, confidence, ocr_allowlist)
-
+            annotated, plates = detect_plate_and_recognize(frame, model, reader, confidence, ocr_allowlist)
             ts = datetime.utcnow().isoformat()
             for p in plates:
                 st.session_state["plates_log"].append({
@@ -189,4 +182,4 @@ with col1:
             st.success("Image processing complete")
 
 st.markdown("---")
-st.markdown("Supports DroidCam live feed, uploaded video, and uploaded images.")
+st.markdown("Now detects **only number plates**, not entire vehicles.")
