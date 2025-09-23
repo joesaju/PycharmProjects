@@ -281,11 +281,11 @@ with col1:
                 cap.release()
                 st.success("DroidCam stopped")
 
-st.markdown("---")
-st.markdown("""
-**Notes & next steps (honest):**
-- If you want high accuracy, **train a YOLOv8 plate detector** on plates from your region (fonts, sizes). The YOLO path box in the sidebar accepts such a model file.
-- The OpenCV fallback works well on many photos but may fail on heavily occluded or extremely small plates.
-- Tweak `min/max plate area` and aspect ratio checks if your camera crops or image sizes differ.
-- Add deduplication (ignore same plate seen within N seconds) to reduce repeated logs.
-""")
+# st.markdown("---")
+# st.markdown("""
+# **Notes & next steps (honest):**
+# - If you want high accuracy, **train a YOLOv8 plate detector** on plates from your region (fonts, sizes). The YOLO path box in the sidebar accepts such a model file.
+# - The OpenCV fallback works well on many photos but may fail on heavily occluded or extremely small plates.
+# - Tweak `min/max plate area` and aspect ratio checks if your camera crops or image sizes differ.
+# - Add deduplication (ignore same plate seen within N seconds) to reduce repeated logs.
+# """)
