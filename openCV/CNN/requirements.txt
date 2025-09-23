@@ -1,9 +1,8 @@
-ultralytics==8.2.77
-streamlit==1.38.0
-opencv-python==4.10.0.84
-pandas==2.2.2
-numpy==1.26.4
-torch>=2.0.0
-torchvision>=0.15.0
-easyocr==1.7.1
-Pillow==10.4.0
+streamlit>=1.25
+ultralytics>=8.0.132   # ultralytics yolov8
+opencv-python-headless>=4.7
+pillow
+pytesseract
+easyocr
+numpy
+torch>=2.0  # or compatible with your GPU/CPU setup
