@@ -255,8 +255,16 @@ with col1:
                 stframe.image(cv2.cvtColor(annotated, cv2.COLOR_BGR2RGB), channels="RGB")
                 # update log view
                 df = pd.DataFrame(st.session_state["plates_log"])
-                log_placeholder.dataframe(df.sort_values("timestamp", ascending=False).head(50))
-                time.sleep(0.03)
+                log_data = []
+            # Suppose predictions contain plate_number
+            for plate_number in df:
+                log_data.append({
+        "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+        "plate_number": plate_number
+    })
+            df = pd.DataFrame(log_data)
+            log_placeholder.dataframe(df.sort_values("timestamp", ascending=False).head(50))
+            time.sleep(0.03)
             cap.release()
             st.success("Video processing complete")
 
