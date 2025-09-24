@@ -12,7 +12,7 @@ import time
 st.set_page_config(page_title="YOLO + OCR License Plate Recognition", layout="wide")
 
 # ---------- Config ----------
-YOLO_MODEL_PATH = "models/best_lp.pt"  # change if your model file is elsewhere
+YOLO_MODEL_PATH = r"D:\python\New folder\best_lp.pt"  # change if your model file is elsewhere
 USE_EASYOCR_FALLBACK = True
 TESSERACT_LANG = 'eng'  # change/add languages if you installed them
 OCR_PSM = 7  # tesseract psm
