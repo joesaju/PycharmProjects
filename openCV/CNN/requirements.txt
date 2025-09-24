@@ -1,0 +1,8 @@
+streamlit>=1.20
+ultralytics>=8.0.181
+opencv-python
+numpy
+pandas
+Pillow
+easyocr   # optional but recommended
+pytesseract  # optional fallback
