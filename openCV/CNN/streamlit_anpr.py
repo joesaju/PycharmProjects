@@ -231,30 +231,51 @@ def process_frame(frame_bgr, model, reader, conf_th):
         results = model(frame_bgr)[0]  # run single-image inference
     except Exception as e:
         return frame_bgr, plates
+
     boxes = parse_yolo_results(results, conf_th)
-    for (x1,y1,x2,y2, det_conf, cls) in boxes:
-        # crop with margin
+
+    for (x1, y1, x2, y2, det_conf, cls) in boxes:
+        # Ensure detection is a plate (class id == 0 if you trained only "plate")
+        # If your model has multiple classes, replace with correct index/name check
+        if hasattr(model, "names"):
+            class_name = model.names.get(cls, "")
+            if class_name.lower() not in ["plate", "license_plate", "number_plate"]:
+                continue  # skip non-plate detections
+
+        # crop with small margin
         h, w = frame_bgr.shape[:2]
-        pad = int(0.03 * max(w,h))
-        x1m = max(0, x1-pad)
-        y1m = max(0, y1-pad)
-        x2m = min(w, x2+pad)
-        y2m = min(h, y2+pad)
+        pad = int(0.02 * max(w, h))
+        x1m = max(0, x1 - pad)
+        y1m = max(0, y1 - pad)
+        x2m = min(w, x2 + pad)
+        y2m = min(h, y2 + pad)
         crop = frame_bgr[y1m:y2m, x1m:x2m]
+
+        # preprocess for OCR
         pre = preprocess_plate_for_ocr(crop)
         text = ""
         oconf = 0.0
+
         if pre is not None:
             if use_easyocr and reader is not None:
                 text, oconf = ocr_with_easyocr(reader, pre)
-            if (not text or len(text.strip())==0) and use_pytesseract:
+            if (not text or len(text.strip()) == 0) and use_pytesseract:
                 text, oconf2 = ocr_with_pytesseract(pre)
-                # keep max confidence (even though pytesseract confidence is placeholder)
                 oconf = max(oconf, oconf2)
+
         text_norm = normalize_plate_text(text)
-        plates.append({"box":(x1,y1,x2,y2), "text": text_norm, "raw_text": text, "ocr_conf": oconf, "det_conf": det_conf})
+
+        plates.append({
+            "box": (x1, y1, x2, y2),
+            "text": text_norm,
+            "raw_text": text,
+            "ocr_conf": oconf,
+            "det_conf": det_conf
+        })
+
     annotated = annotate_frame(frame_bgr, plates)
     return annotated, plates
+
 
 # Mode: Upload Image
 if mode == "Upload image":
