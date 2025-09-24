@@ -1,8 +1,0 @@
-streamlit>=1.25
-ultralytics>=8.0.132   # ultralytics yolov8
-opencv-python-headless>=4.7
-pillow
-pytesseract
-easyocr
-numpy
-torch>=2.0  # or compatible with your GPU/CPU setup
