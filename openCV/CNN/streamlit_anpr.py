@@ -13,7 +13,7 @@ st.set_page_config(page_title="YOLOv8 Vehicle License Plate Recognition", layout
 st.title("🚗 YOLOv8 Vehicle License Plate Recognition (ANPR)")
 
 # Load YOLOv8 model (custom-trained for license plates)
-model = YOLO("yolov8_lp.pt")  # Replace with your custom-trained model path
+model = YOLO("yolov8n.pt")  # Replace with your custom-trained model path
 
 stream_source = st.selectbox("Select Stream Source:", ["Webcam", "DroidCam", "Upload Photo", "Upload Video"])
 
