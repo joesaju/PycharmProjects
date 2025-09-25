@@ -363,7 +363,7 @@ def process_image_file(image_bytes, source_label="upload"):
     col1, col2 = st.columns([2,1])
     with col1:
         st.subheader("Frame / Image")
-        st.image(cv2.cvtColor(orig, cv2.COLOR_BGR2RGB), use_container_width=True)
+        st.image(cv2.cvtColor(orig, cv2.COLOR_BGR2RGB), width='stretch')
     with col2:
         st.subheader("Detected plate (crop)")
         if detected_plate_crop is not None:
@@ -452,7 +452,7 @@ def process_video_stream(cap, max_frames=10000, source_label="stream"):
                     display_frame[5:5+h_p, 5:5+w_p] = preview
 
         # Show frame in Streamlit
-        stframe.image(cv2.cvtColor(display_frame, cv2.COLOR_BGR2RGB), channels="RGB", use_container_width=True)
+        stframe.image(cv2.cvtColor(display_frame, cv2.COLOR_BGR2RGB), channels="RGB", width='stretch')
         # show info area
         df = pd.DataFrame(st.session_state['detections']).sort_values("timestamp", ascending=False).head(25)
         info_area.dataframe(df)
