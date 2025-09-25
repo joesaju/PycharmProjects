@@ -1,6 +1,7 @@
-streamlit==1.27.0
-opencv-python==4.8.0.76
-ultralytics==8.1.13
-pytesseract==0.3.11
-numpy==1.26.0
-Pillow==10.0.1
+streamlit
+torch
+ultralytics
+opencv-python
+Pillow
+pytesseract
+numpy
