@@ -52,7 +52,7 @@ def load_easyocr_reader(lang_list=["en"]):
         return None
 
 @st.cache_resource
-def load_yolo(path="D:\python\New folder\openCV\CNN\yolov8n.pt"):
+def load_yolo(path=None):
     """
     Load an Ultralytics YOLO model from a .pt or .onnx file if provided.
     If no path, returns None.
@@ -62,7 +62,7 @@ def load_yolo(path="D:\python\New folder\openCV\CNN\yolov8n.pt"):
         return None
     try:
         from ultralytics import YOLO
-        model = YOLO(path)
+        model = YOLO("D:\python\New folder\openCV\CNN\best.pt")
         YOLO_AVAILABLE = True
         return model
     except Exception as e:
