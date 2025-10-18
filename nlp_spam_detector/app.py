@@ -5,10 +5,10 @@ import pickle, os
 @st.cache_resource
 def load_model_and_vectorizer():
     current_dir = os.path.dirname(os.path.abspath(__file__))
-    with open(os.path.join(current_dir, r"D:\python\New folder\nlp_spam_detector\models\spam_model.pkl"), "rb") as f:
-        model = pickle.load(f)
-    with open(os.path.join(current_dir, r"D:\python\New folder\nlp_spam_detector\models\vectorizer.pkl"), "rb") as f:
-        vectorizer = pickle.load(f)
+    with open(os.path.join(current_dir, r"D:\python\New folder\nlp_spam_detector\models\spam_model.pkl"), "rb") as mf:
+        model = pickle.load(mf)
+    with open(os.path.join(current_dir, r"D:\python\New folder\nlp_spam_detector\models\vectorizer.pkl"), "rb") as vf:
+        vectorizer = pickle.load(vf)
     return model, vectorizer
 
 model, vectorizer = load_model_and_vectorizer()
