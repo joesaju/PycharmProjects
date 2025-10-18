@@ -1,8 +1,8 @@
 import streamlit as st
 import pickle
 # Load saved model and vectorizer
-model = pickle.load(open(r'D:\python\New folder\nlp_spam_detector\spam_model.pkl', 'rb'))
-vectorizer = pickle.load(open(r'D:\python\New folder\nlp_spam_detector\vectorizer.pkl', 'rb'))
+model = pickle.load(open(r'spam_model.pkl', 'rb'))
+vectorizer = pickle.load(open(r'vectorizer.pkl', 'rb'))
 
 
 st.title("SMS Spam Detector")
