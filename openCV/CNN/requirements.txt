@@ -1,7 +1,5 @@
-streamlit
-torch
-ultralytics
-opencv-python
-Pillow
-pytesseract
-numpy
+streamlit>=1.25.0
+opencv-python>=4.7.0
+opencv-contrib-python>=4.7.0
+numpy>=1.24.0
+pillow>=10.0.0

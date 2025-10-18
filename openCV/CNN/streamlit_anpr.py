@@ -62,7 +62,7 @@ def load_yolo(path=None):
         return None
     try:
         from ultralytics import YOLO
-        model = YOLO(r"D:\python\New folder\openCV\CNN\best.pt")
+        model = YOLO(r"D:\python\New folder\openCV\CNN\yolov8n.pt")
         YOLO_AVAILABLE = True
         return model
     except Exception as e:
@@ -197,6 +197,7 @@ def ocr_easyocr(reader, plate_image_bgr):
     avg_conf = float(np.mean(confs)) if confs else 0.0
     return text, avg_conf
 
+
 def ocr_pytesseract(plate_image_bgr):
     """
     Use pytesseract to OCR plate region. Returns (text, confidence). Note: pytesseract confidence parsing is hacky.
@@ -230,7 +231,7 @@ st.markdown("""
 - Detect license plates (YOLO if you supply a model, otherwise OpenCV heuristic)
 - OCR the plate (EasyOCR preferred)
 - Validate recognized text against a license-plate regex (default: India)
-- Supports: Image upload, Video upload, Webcam, DroidCam/IP camera
+- Supports: Image upload, Video upload, Webcam, DroidCam/IP camera,ESP Camera
 """)
 
 # Sidebar: model & OCR settings
@@ -263,7 +264,7 @@ if country_choice == "Custom regex":
     custom_regex = st.sidebar.text_input("Enter custom regex (use uppercase A-Z, 0-9). Example: ^[A-Z0-9]{4,10}$")
 
 # Modes: Image / Video / Webcam / DroidCam
-mode = st.selectbox("Input mode", ["Image", "Video", "Webcam", "DroidCam (IP camera)"])
+mode = st.selectbox("Input mode", ["Image", "Video", "Webcam", "DroidCam (IP camera)","ESP32-S3 Camera"])
 
 # Placeholder for output image / video frame
 output_placeholder = st.empty()
@@ -421,35 +422,28 @@ def process_video_stream(cap, max_frames=10000, source_label="stream"):
                     detected_bbox = bbox
                     detection_conf = 0.45
 
+            # If we found a plate region, OCR it
+            recognized_text = ""
+            ocr_conf = 0.0
             if detected_plate_crop is not None:
-                # OCR
-                if ocr_choice.startswith("EasyOCR") and reader is not None:
-                    text, ocr_conf = ocr_easyocr(reader, detected_plate_crop)
-                elif PYTESSERACT_AVAILABLE:
-                    text, ocr_conf = ocr_pytesseract(detected_plate_crop)
-                else:
-                    text, ocr_conf = "", 0.0
-                normalized = normalize_text(text)
-                if custom_regex:
-                    valid = bool(re.match(custom_regex, normalized))
-                    matched = custom_regex if valid else None
-                else:
-                    valid, matched = validate_plate_text(normalized, country="IN")
-                # Log and annotate if new or repeated with some cooldown
-                now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-                if normalized and (normalized != last_plate):
-                    last_plate = normalized
-                    log_detection(normalized, ocr_conf if ocr_conf else detection_conf, detected_bbox, source=source_label)
-                # Draw bbox on display frame
-                if detected_bbox:
-                    draw_bbox(display_frame, detected_bbox, label=f"{normalized} {round(ocr_conf,3)}")
-                    # Show plate crop in small overlay
-                    ph, pw = detected_plate_crop.shape[:2]
-                    # resize small preview
-                    preview = cv2.resize(detected_plate_crop, (int(pw*0.6), int(ph*0.6)))
-                    # place preview at top-left
-                    h_p, w_p = preview.shape[:2]
-                    display_frame[5:5+h_p, 5:5+w_p] = preview
+    # Enhanced preprocessing
+                plate = detected_plate_crop.copy()
+                plate = cv2.cvtColor(plate, cv2.COLOR_BGR2GRAY)
+                plate = cv2.equalizeHist(plate)
+                plate = cv2.bilateralFilter(plate, 9, 75, 75)
+                plate = cv2.convertScaleAbs(plate, alpha=1.5, beta=0)
+                kernel = np.array([[0, -1, 0],
+                       [-1, 5,-1],
+                       [0, -1, 0]])
+                plate == cv2.filter2D(plate, -1, kernel), plate == cv2.threshold(plate, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+                plate == cv2.cvtColor(plate, cv2.COLOR_GRAY2BGR)
+    
+    # OCR
+            if ocr_choice.startswith("EasyOCR") and reader is not None:
+                recognized_text, ocr_conf = ocr_easyocr(reader, plate)
+            elif PYTESSERACT_AVAILABLE:
+                recognized_text, ocr_conf = ocr_pytesseract(plate)
+
 
         # Show frame in Streamlit
         stframe.image(cv2.cvtColor(display_frame, cv2.COLOR_BGR2RGB), channels="RGB", width='stretch')
@@ -495,6 +489,24 @@ elif mode == "DroidCam (IP camera)":
             st.error("Cannot open stream. Check URL and that your phone & PC are on the same network.")
         else:
             process_video_stream(cap, source_label="ip_stream")
+            
+elif mode == "ESP32-S3 Camera":
+    st.info("Connect your ESP32-S3 camera to the same WiFi network and enter its stream URL.")
+    st.markdown("Example: `http://192.168.1.45:81/stream` (check your Serial Monitor for exact IP)")
+    
+    esp_url = st.text_input("ESP32-S3 Stream URL", "http://192.168.1.45:81/stream")
+    start_esp = st.button("Start ESP32-S3 Stream")
+    
+    if start_esp and esp_url:
+        cap = cv2.VideoCapture(esp_url)
+        if not cap.isOpened():
+            st.error("Cannot open ESP32-S3 stream. Check URL and network connection.")
+        else:
+            st.success(f"Connected to ESP32-S3 stream at {esp_url}")
+            process_video_stream(cap, source_label="esp32_s3_stream")
+
+
+
 
 # Show detection log and CSV export
 st.header("Detections log")

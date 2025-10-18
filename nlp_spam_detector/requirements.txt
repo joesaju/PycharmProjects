@@ -1,0 +1,15 @@
+# Core dependencies
+pandas==2.2.3
+numpy==2.1.2
+scikit-learn==1.5.2
+nltk==3.9.1
+
+# Web app
+streamlit==1.38.0
+
+# Optional visualization and debugging
+matplotlib==3.9.2
+seaborn==0.13.2
+
+# For model saving/loading
+pickle-mixin==1.0.2
